@@ -156,6 +156,14 @@
     <button class="btn-primary" id="instantReportBtn">Generate &amp; email report</button>
   </div>
 
+  <div class="report-bar" style="margin-top:14px; border-style:dashed;">
+    <div class="rb-text">
+      <h3>🧪 Test: send weekly report now</h3>
+      <p>Temporary testing button — manually fires the same automatic weekly email/PDF process, so you can confirm it works without waiting until Monday.</p>
+    </div>
+    <button class="btn-secondary" id="testWeeklyBtn">Send test now</button>
+  </div>
+
   <div class="controls-section">
     <div class="controls-label">Browse and export a past week or month</div>
     <div class="controls">
@@ -508,6 +516,31 @@ document.getElementById('periodReportBtn').addEventListener('click', () => {
   const doc = buildPdf(entries, `${viewMode === 'weekly' ? 'Weekly' : 'Monthly'} Suggestion Report`, `${label} (${entries.length} submission${entries.length===1?'':'s'})`);
   const filename = `PSI-Suggestions-${label.replace(/[^a-zA-Z0-9]+/g,'-')}.pdf`;
   doc.save(filename);
+});
+
+document.getElementById('testWeeklyBtn').addEventListener('click', async () => {
+  const secret = prompt("Enter your CRON_SECRET (the one you set on Render) to run this test:");
+  if (!secret) return;
+  const btn = document.getElementById('testWeeklyBtn');
+  btn.disabled = true;
+  btn.textContent = 'Sending...';
+  try {
+    const res = await fetch(`${API_BASE}/api/reports/send-weekly-now`, {
+      method: 'POST',
+      headers: { 'x-cron-secret': secret }
+    });
+    const data = await res.json();
+    if (res.ok) {
+      alert('Test report sent! Check greg.t@psigroup.net.au and logan.t@psigroup.net.au inboxes.');
+    } else {
+      alert('Failed: ' + (data.error || 'Unknown error — check the secret is correct.'));
+    }
+  } catch (e) {
+    alert('Could not reach the server.');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Send test now';
+  }
 });
 </script>
 </body>
